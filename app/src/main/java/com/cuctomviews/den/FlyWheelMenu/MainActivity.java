@@ -1,5 +1,6 @@
 package com.cuctomviews.den.FlyWheelMenu;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 
@@ -25,10 +26,11 @@ public class MainActivity extends Activity {
             pie.addItem(1, getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.fillSector),getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
         }
 
-        ((Button) findViewById(com.cuctomviews.den.FlyWheelMenu.R.id.Reset)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                pie.setCurrentItem(0);
-            }
-        });
+//        pie.addItem(1, Color.RED,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+//        pie.addItem(1, Color.BLUE,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+//        pie.addItem(1, Color.YELLOW,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+//        pie.addItem(1, Color.GRAY,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+//        pie.addItem(1, Color.MAGENTA,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+
     }
 }
