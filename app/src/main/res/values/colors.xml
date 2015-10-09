@@ -6,7 +6,10 @@
 
     <color name="fillSector">#484450</color>
     <color name="strokeColor">#d73613</color>
-    <color name="pressedColor">#39dc6c</color>
+    <color name="redShadowColor">#c1624d</color>
+    <color name="pressedSectorColor">#39dc6c</color>
+    <color name="pressedStrokeColor">#498c5e</color>
+    <color name="greenShadowColor">#6dea94</color>
     <color name="bluegrass">#ff96c9b5</color>
     <color name="turquoise">#ff86b9b5</color>
     <color name="slate">#ff76a9b5</color>

@@ -50,7 +50,8 @@ public class PieChart extends ViewGroup {
 
     public static final int AUTOCENTER_ANIM_DURATION = 250;
 
-    int [] icons = {R.mipmap.ic_launcher};
+    int [] icons = {R.drawable.bluetooth,R.drawable.call_transfer,R.drawable.callback, R.drawable.cellular_network,
+            R.drawable.end_call,R.drawable.high_connection, R.drawable.missed_call,R.drawable.mms};
 
     private float mRadius;
 
@@ -183,10 +184,10 @@ public class PieChart extends ViewGroup {
     }
 
     private void onDataChanged() {
-        int currentAngle = 0;
+        float currentAngle = 0;
         for (Item it : mData) {
             it.mStartAngle = currentAngle;
-            it.mEndAngle = (int) ((float) currentAngle + it.mValue * 360.0f / mTotal);
+            it.mEndAngle = (currentAngle + it.mValue * 360.0f / mTotal);
             currentAngle = it.mEndAngle;
         }
         calcCurrentItem();
@@ -207,6 +208,8 @@ public class PieChart extends ViewGroup {
 
             mAutoCenterAnimator.addListener(new Animator.AnimatorListener() {
                 public void onAnimationStart(Animator animator) {
+//                    mPieView.accelerate();
+
                 }
 
                 public void onAnimationEnd(Animator animator) {
@@ -296,22 +299,30 @@ public class PieChart extends ViewGroup {
 
     private void centerOnCurrentItem() {
         Item current = mData.get(getCurrentItem());
-        int targetAngle = current.mStartAngle + (current.mEndAngle - current.mStartAngle)/2;
-        targetAngle -= mCurrentItemAngle - 54;
+        float targetAngle = current.mStartAngle + (current.mEndAngle - current.mStartAngle)/2;
+        targetAngle -= mCurrentItemAngle - (90-360f/mData.size()) - (360f/mData.size())/2;
 
-        Log.d("DEBUG: ", ", "+ targetAngle + " , " + mPieRotation + " , " + current.mStartAngle + " , " + current.mEndAngle);
-        if (targetAngle < 90 && mPieRotation > 180) {
-            targetAngle += 270;
-        }else{
-            targetAngle -= 90;
+        Log.d("DEBUG: ", "Target: "+ targetAngle + " ,Rot " + mPieRotation + " ,Start " + current.mStartAngle + " ,End " + current.mEndAngle);
+        if (targetAngle <=89 && mPieRotation > 180) {
+            targetAngle += 360;
         }
-
+        else{
+            targetAngle -= 90;
+//            if (targetAngle == 0 && mPieRotation != 0){
+//                targetAngle = 360;
+//            }
+//            else targetAngle -= 90;
+        }
+//        if (targetAngle > 90 ){
+//            targetAngle -= 90;
+//        }
+        Log.d("DEBUG: ", "Target: "+ targetAngle);
         if (Build.VERSION.SDK_INT >= 11) {
             // Fancy animated version
-            mAutoCenterAnimator.setIntValues(targetAngle);
+            mAutoCenterAnimator.setIntValues((int)targetAngle);
             mAutoCenterAnimator.setDuration(AUTOCENTER_ANIM_DURATION).start();
         } else {
-            // Dull non-animated version
+//             Dull non-animated version
             mPieView.rotateTo(targetAngle);
         }
     }
@@ -370,7 +381,9 @@ public class PieChart extends ViewGroup {
             } else {
                 radius = width / 2;
             }
-//            canvas.rotate(234, mBounds.centerX(), mBounds.centerY());
+
+            float x = (float) (Math.cos(Math.toRadians(360-360f/mData.size()/4))*(radius-5));
+            float y = (float) (Math.sin(Math.toRadians(360-360f/mData.size()/4))*(radius-5));
 
             for (Item it : mData) {
 
@@ -381,31 +394,35 @@ public class PieChart extends ViewGroup {
                 mPiePaint.setAntiAlias(true);
                 mPiePaint.setStyle(Paint.Style.FILL);
                 canvas.drawArc(mBounds,
-                        360 - it.mEndAngle - 54,
-                        it.mEndAngle - it.mStartAngle,
+                        360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2,
+                        360f / mData.size(),
                         true, mPiePaint);
-                Log.d("CANVAS: ", "End: " + it.mEndAngle + " ,Start: " + it.mStartAngle);
+                Log.d("CANVAS: ", "End: " + 360f / mData.size() + " ,Start: " + (360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2));
 
                 //Line
-                mPiePaint.setColor(it.mStrokeColor);
-                mPiePaint.setStrokeWidth(5);
-                mPiePaint.setAntiAlias(true);
-                mPiePaint.setStyle(Paint.Style.STROKE);
-                canvas.drawArc(mBounds,
-                        360 - it.mEndAngle - 54,
-                        it.mEndAngle - it.mStartAngle,
-                        true, mPiePaint);
-
-//                canvas.drawLine(mBounds.centerX(),mBounds.centerY(),radius,radius,mPiePaint);
+//                mPiePaint.setColor(it.mStrokeColor);
+//                mPiePaint.setStrokeWidth(5);
+//                mPiePaint.setAntiAlias(true);
+//                mPiePaint.setStyle(Paint.Style.STROKE);
+//                canvas.drawArc(mBounds,
+//                        360f - it.mEndAngle - (90 - 360f/mData.size()) - 360f/mData.size()/2,
+//                        360f/mData.size(),
+//                        true, mPiePaint);
             }
-            invalidate();
-            for (int i = 0; i < 5; i++) {
-                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), icons[0]);
+
+            Item it;
+            for (int i = 0 ; i <  mData.size() ; i ++) {
+                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), icons[i]);
                 canvas.drawBitmap(bitmap, mBounds.centerX() - bitmap.getWidth() / 2,
                         mBounds.centerY() - (radius * 2 / 3) - bitmap.getHeight() / 2, mPiePaint);
-                canvas.rotate(72, mBounds.centerX(), mBounds.centerY());
-            }
 
+                it = mData.get( mData.size() -1 - i);
+                mPiePaint.setColor(it.mStrokeColor);
+                mPiePaint.setStrokeWidth(5);
+                canvas.drawLine(mBounds.centerX(), mBounds.centerY(), mBounds.centerX() + x, mBounds.centerY() + y, mPiePaint);
+
+                canvas.rotate(360f/mData.size(), mBounds.centerX(), mBounds.centerY());
+            }
 
             //Ring1
             mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
@@ -415,21 +432,28 @@ public class PieChart extends ViewGroup {
             mPiePaint.setStyle(Paint.Style.STROKE);
             canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
 
+            //Ring2
 
-            mBounds.set(width / 2 - radius / 4, height / 2 - radius / 4, width / 2 + radius / 4, height / 2 + radius / 4);
-            //Ring3
-            mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
+            mBounds.set(width / 2 - radius / 3, height / 2 - radius / 3, width / 2 + radius / 3, height / 2 + radius / 3);
+
+            mPiePaint.setColor(getResources().getColor(R.color.pressedSectorColor));
             mPiePaint.setAntiAlias(true);
             mPiePaint.setStyle(Paint.Style.FILL);
             canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
 
-            //Ring2
-            mPiePaint.setColor(getResources().getColor(R.color.pressedColor));
-            mPiePaint.setStrokeWidth(20);
+            //Ring3
+            mBounds.set(width / 2 - radius / 5, height / 2 - radius / 5, width / 2 + radius / 5, height / 2 + radius / 5);
+            mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
             mPiePaint.setAntiAlias(true);
-            mPiePaint.setStrokeCap(Paint.Cap.ROUND);
-            mPiePaint.setStyle(Paint.Style.STROKE);
+            mPiePaint.setStyle(Paint.Style.FILL);
             canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
+//            mPiePaint.setColor(getResources().getColor(R.color.redShadowColor));
+//            mPiePaint.setStrokeWidth(10);
+//            mPiePaint.setAntiAlias(true);
+//            mPiePaint.setStrokeCap(Paint.Cap.ROUND);
+//            mPiePaint.setStyle(Paint.Style.STROKE);
+//            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
+//
 
             canvas.save();
         }
@@ -515,8 +539,8 @@ public class PieChart extends ViewGroup {
 //        public
 
         // computed values
-        public int mStartAngle;
-        public int mEndAngle;
+        public float mStartAngle;
+        public float mEndAngle;
     }
 
     /**
@@ -528,27 +552,33 @@ public class PieChart extends ViewGroup {
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
 
-
 //            Get pressed item
-            double angle = getAngle(e.getY(),e.getX());
+            float angle = (float) getAngle(e.getY(),e.getX()) ;
 
-            double an = mPieRotation - 54;
+            double an = mPieRotation - (90-360f/mData.size()) - 360f/mData.size()/2;
 
-            Log.d("ROTATE!!!: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle);
+            if (an<0) an += 360;
 
             for (int i = mData.size() -1 ; i >=0  ; i --) {
-                an = an + (360/mData.size());
-                if(an > 360 && (an-(360/mData.size())) > 0) {
-                    an = an - 360;
-                    if ((angle <= an) && (angle > (an - (360 / mData.size())))) {
-                        Log.d("ROTATE: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i);
+                an = an + (360f/mData.size());
+
+                if (an > 360) {an = an - 360;}
+                if ((an-(360f/mData.size())) > 0) {
+
+                    if ((angle <= an) && (angle > (an - (360f / mData.size())))) {
+                        Log.d("ROTATE: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i+ " , pierot:" + mPieRotation);
                         setCurrentItem(i);
                         setPressedColor(i);
                     }
-                } else {
-                    if ((angle <= an) && (angle > (an - (360 / mData.size()))||
-                            (angle < 360) && (angle > (360 + an - 360/mData.size())))) {
-                        Log.d("ROTATE: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i);
+                } else{
+                    Log.d("ROTATE!!: ", "ROTATE: " + an + " , angle TOUCH: " + angle + " , pierot:" + mPieRotation + " , after: " + (an + (360f/mData.size())));
+
+                    if ((angle <= an) && (angle > (an - (360f / mData.size())) ||
+                            (angle < 360f) && (angle > (360 + an - 360f / mData.size())))) {
+                        Log.d("ROTATE!: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i + " , pierot:" + mPieRotation);
+                        setCurrentItem(i);
+                        setPressedColor(i);
+                    }else if (angle<=360 && angle > (360-an) ){
                         setCurrentItem(i);
                         setPressedColor(i);
                     }
@@ -563,8 +593,8 @@ public class PieChart extends ViewGroup {
             for(int j = 0; j < mData.size(); j++){
                 if (j == i){
                     current = mData.get(i);
-                    current.mSliceColor = getResources().getColor(R.color.pressedColor);
-                    current.mStrokeColor = getResources().getColor(R.color.pressedColor);
+                    current.mSliceColor = getResources().getColor(R.color.pressedSectorColor);
+                    current.mStrokeColor = getResources().getColor(R.color.pressedStrokeColor);
 
                 }
                 else{
@@ -615,7 +645,7 @@ public class PieChart extends ViewGroup {
 
         @Override
         public boolean onDown(MotionEvent e) {
-
+//            mPieView.accelerate();
             return true;
         }
     }
