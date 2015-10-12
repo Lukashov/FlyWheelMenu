@@ -1,4 +1,4 @@
-package com.cuctomviews.den.FlyWheelMenu.charting;
+package com.cuctomviews.den.FlyWheelMenu;
 
         import android.animation.Animator;
         import android.animation.ObjectAnimator;
@@ -12,15 +12,14 @@ package com.cuctomviews.den.FlyWheelMenu.charting;
         import android.view.*;
         import android.widget.Scroller;
 
-        import com.cuctomviews.den.FlyWheelMenu.R;
-
         import java.lang.Math;
         import java.lang.Override;
         import java.util.ArrayList;
         import java.util.List;
 
 public class PieChart extends ViewGroup {
-    private List<Item> mData = new ArrayList<Item>();
+
+    private List<SectorFlyWheelModel> mData = new ArrayList<SectorFlyWheelModel>();
 
     private float mTotal = 0.0f;
 
@@ -32,9 +31,8 @@ public class PieChart extends ViewGroup {
 
     private int mPieRotation;
 
-    private OnCurrentItemChangedListener mCurrentItemChangedListener = null;
-
     private PieView mPieView;
+    private SectorFlyWheelView mSectorFlyWheelView;
     private Scroller mScroller;
     private ValueAnimator mScrollAnimator;
     private GestureDetector mDetector;
@@ -55,9 +53,7 @@ public class PieChart extends ViewGroup {
 
     private float mRadius;
 
-    public interface OnCurrentItemChangedListener {
-        void OnCurrentItemChanged(PieChart source, int currentItem);
-    }
+    private SectorFlyWheelModel mSectorFlyWheelModel;
 
     public PieChart(Context context) {
         super(context);
@@ -92,43 +88,18 @@ public class PieChart extends ViewGroup {
         rotation = (rotation % 360 + 360) % 360;
         mPieRotation = rotation;
         mPieView.rotateTo(rotation);
-
-        calcCurrentItem();
-    }
-
-    public int getCurrentItem() {
-        return mCurrentItem;
-    }
-
-    public void setCurrentItem(int currentItem) {
-        setCurrentItem(currentItem, true);
-    }
-
-    private void setCurrentItem(int currentItem, boolean scrollIntoView) {
-        mCurrentItem = currentItem;
-        if (mCurrentItemChangedListener != null) {
-            mCurrentItemChangedListener.OnCurrentItemChanged(this, currentItem);
-        }
-        if (scrollIntoView) {
-            centerOnCurrentItem();
-        }
-        invalidate();
-    }
-
-    public void setOnCurrentItemChangedListener(OnCurrentItemChangedListener listener) {
-        mCurrentItemChangedListener = listener;
     }
 
     public int addItem(float value, int sliceColor, int strokeColor) {
-        Item it = new Item();
-        it.mSliceColor = sliceColor;
-        it.mStrokeColor = strokeColor;
+        mSectorFlyWheelModel = new SectorFlyWheelModel();
+        mSectorFlyWheelModel.mSliceColor = sliceColor;
+        mSectorFlyWheelModel.mStrokeColor = strokeColor;
 
-        it.mValue = value;
+        mSectorFlyWheelModel.mValue = value;
 
         mTotal += value;
 
-        mData.add(it);
+        mData.add(mSectorFlyWheelModel);
 
         onDataChanged();
 
@@ -151,8 +122,6 @@ public class PieChart extends ViewGroup {
         float ww = (float) w - xpad;
         float hh = (float) h - ypad;
 
-
-
         mDiameterMax = Math.min(ww, hh);
         mPieBounds = new RectF(
                 0.0f,
@@ -170,36 +139,26 @@ public class PieChart extends ViewGroup {
         onDataChanged();
     }
 
-    private void calcCurrentItem() {
-        int pointerAngle = (mCurrentItemAngle + 360 + mPieRotation) % 360;
-        for (int i = 0; i < mData.size(); ++i) {
-            Item it = mData.get(i);
-            if (it.mStartAngle <= pointerAngle && pointerAngle <= it.mEndAngle) {
-                if (i != mCurrentItem) {
-                    setCurrentItem(i, false);
-                }
-                break;
-            }
-        }
-    }
-
     private void onDataChanged() {
         float currentAngle = 0;
-        for (Item it : mData) {
+        for (SectorFlyWheelModel it : mData) {
             it.mStartAngle = currentAngle;
             it.mEndAngle = (currentAngle + it.mValue * 360.0f / mTotal);
             currentAngle = it.mEndAngle;
         }
-        calcCurrentItem();
     }
 
     private void init() {
+
         setLayerToSW(this);
 
         mPiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPiePaint.setStyle(Paint.Style.FILL);
 
+//        mSectorFlyWheelView = new SectorFlyWheelView(getContext(), mSectorFlyWheelModel);
+
         mPieView = new PieView(getContext());
+
         addView(mPieView);
         mPieView.rotateTo(mPieRotation);
 
@@ -208,12 +167,9 @@ public class PieChart extends ViewGroup {
 
             mAutoCenterAnimator.addListener(new Animator.AnimatorListener() {
                 public void onAnimationStart(Animator animator) {
-//                    mPieView.accelerate();
-
                 }
 
                 public void onAnimationEnd(Animator animator) {
-                    mPieView.decelerate();
                 }
 
                 public void onAnimationCancel(Animator animator) {
@@ -249,8 +205,6 @@ public class PieChart extends ViewGroup {
 
             boolean result = mDetector.onTouchEvent(event);
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                Log.d("COORD: ", "COORDX: " + event.getX() + " ,COORDY: " + event.getY()
-                        + " Pos: " + getCurrentItem() + " ,In: " + mPieRotation);
             }
             if (!result) {
                 if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -268,9 +222,6 @@ public class PieChart extends ViewGroup {
             if (angle < 0) {
                 angle += 360;
             }
-
-        Log.d("COS: ","angle: "+ (360 - angle) + " coord: " + pointY + " , x: " + pointX);
-
         return 360 - angle;
     }
 
@@ -291,46 +242,6 @@ public class PieChart extends ViewGroup {
         }
     }
 
-    private void setLayerToHW(View v) {
-        if (!v.isInEditMode() && Build.VERSION.SDK_INT >= 11) {
-            setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        }
-    }
-
-    private void centerOnCurrentItem() {
-        Item current = mData.get(getCurrentItem());
-        float targetAngle = current.mStartAngle + (current.mEndAngle - current.mStartAngle)/2;
-        targetAngle -= mCurrentItemAngle - (90-360f/mData.size()) - (360f/mData.size())/2;
-
-        Log.d("DEBUG: ", "Target: "+ targetAngle + " ,Rot " + mPieRotation + " ,Start " + current.mStartAngle + " ,End " + current.mEndAngle);
-        if (targetAngle <=89 && mPieRotation > 180) {
-            targetAngle += 360;
-        }
-        else{
-            targetAngle -= 90;
-//            if (targetAngle == 0 && mPieRotation != 0){
-//                targetAngle = 360;
-//            }
-//            else targetAngle -= 90;
-        }
-//        if (targetAngle > 90 ){
-//            targetAngle -= 90;
-//        }
-        Log.d("DEBUG: ", "Target: "+ targetAngle);
-        if (Build.VERSION.SDK_INT >= 11) {
-            // Fancy animated version
-            mAutoCenterAnimator.setIntValues((int)targetAngle);
-            mAutoCenterAnimator.setDuration(AUTOCENTER_ANIM_DURATION).start();
-        } else {
-//             Dull non-animated version
-            mPieView.rotateTo(targetAngle);
-        }
-    }
-
-    /**
-     * Internal child class that draws the pie chart onto a separate hardware layer
-     * when necessary.
-     */
     private class PieView extends View {
         // Used for SDK < 11
         private float mRotation = 0;
@@ -338,28 +249,8 @@ public class PieChart extends ViewGroup {
         private PointF mPivot = new PointF();
         private int mColor;
 
-        /**
-         * Construct a PieView
-         *
-         * @param context
-         */
         public PieView(Context context) {
             super(context);
-
-        }
-
-        /**
-         * Enable hardware acceleration (consumes memory)
-         */
-        public void accelerate() {
-            setLayerToHW(this);
-        }
-
-        /**
-         * Disable hardware acceleration (releases memory)
-         */
-        public void decelerate() {
-            setLayerToSW(this);
         }
 
         @Override
@@ -382,10 +273,10 @@ public class PieChart extends ViewGroup {
                 radius = width / 2;
             }
 
-            float x = (float) (Math.cos(Math.toRadians(360-360f/mData.size()/4))*(radius-5));
-            float y = (float) (Math.sin(Math.toRadians(360-360f/mData.size()/4))*(radius-5));
+            float x = (float) (Math.cos(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
+            float y = (float) (Math.sin(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
 
-            for (Item it : mData) {
+            for (SectorFlyWheelModel it : mData) {
 
                 mBounds.set(width / 2 - radius + 5, height / 2 - radius + 5, width / 2 + radius - 5, height / 2 + radius - 5);
 
@@ -410,7 +301,8 @@ public class PieChart extends ViewGroup {
 //                        true, mPiePaint);
             }
 
-            Item it;
+//            TODO: заменить Битмап на дровабле
+            SectorFlyWheelModel it;
             for (int i = 0 ; i <  mData.size() ; i ++) {
                 Bitmap bitmap = BitmapFactory.decodeResource(getResources(), icons[i]);
                 canvas.drawBitmap(bitmap, mBounds.centerX() - bitmap.getWidth() / 2,
@@ -529,24 +421,6 @@ public class PieChart extends ViewGroup {
         }
     }
 
-    /**
-     * Maintains the state for a data item.
-     */
-    private class Item {
-        public float mValue;
-        public int mSliceColor;
-        public int mStrokeColor;
-//        public
-
-        // computed values
-        public float mStartAngle;
-        public float mEndAngle;
-    }
-
-    /**
-     * Extends {@link GestureDetector.SimpleOnGestureListener} to provide custom gesture
-     * processing.
-     */
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
         @Override
@@ -555,7 +429,7 @@ public class PieChart extends ViewGroup {
 //            Get pressed item
             float angle = (float) getAngle(e.getY(),e.getX()) ;
 
-            double an = mPieRotation - (90-360f/mData.size()) - 360f/mData.size()/2;
+            float an = mPieRotation - (90-360f/mData.size()) - 360f/mData.size()/2;
 
             if (an<0) an += 360;
 
@@ -566,20 +440,19 @@ public class PieChart extends ViewGroup {
                 if ((an-(360f/mData.size())) > 0) {
 
                     if ((angle <= an) && (angle > (an - (360f / mData.size())))) {
-                        Log.d("ROTATE: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i+ " , pierot:" + mPieRotation);
-                        setCurrentItem(i);
+
+                        moveToCenterCurrentItem(an);
                         setPressedColor(i);
                     }
                 } else{
-                    Log.d("ROTATE!!: ", "ROTATE: " + an + " , angle TOUCH: " + angle + " , pierot:" + mPieRotation + " , after: " + (an + (360f/mData.size())));
+                    if ((angle < 360f) && (angle > (360 + an - 360f / mData.size()))) {
 
-                    if ((angle <= an) && (angle > (an - (360f / mData.size())) ||
-                            (angle < 360f) && (angle > (360 + an - 360f / mData.size())))) {
-                        Log.d("ROTATE!: ", "angle ROTATE: " + an + " , angle TOUCH: " + angle + " ,I: " + i + " , pierot:" + mPieRotation);
-                        setCurrentItem(i);
+                        moveToCenterCurrentItem(an);
                         setPressedColor(i);
-                    }else if (angle<=360 && angle > (360-an) ){
-                        setCurrentItem(i);
+
+                    }else if (angle<=360 && angle > (360-(360f/mData.size()-an)) || angle <= an && an >= 0){
+
+                        moveToCenterCurrentItem(an);
                         setPressedColor(i);
                     }
                 }
@@ -588,18 +461,82 @@ public class PieChart extends ViewGroup {
             return true;
         }
 
+        public void moveToCenterCurrentItem(float angle){
+
+            float targetAngle;
+
+            if (angle < (360 / mData.size() / 2)){
+                targetAngle = 360 + (angle - 360 / mData.size() / 2);
+            } else{
+                targetAngle = angle - 360 / mData.size() / 2;
+            }
+
+            if (targetAngle <= 270 && targetAngle > 90
+                    || targetAngle > 270 && targetAngle <= 360) {
+                targetAngle = mPieRotation + (270 - targetAngle);
+
+            } else if(targetAngle <= 90 && targetAngle >= 0 ){
+                targetAngle = mPieRotation - (targetAngle + 90);
+            }
+
+                if (Build.VERSION.SDK_INT >= 11) {
+                    mAutoCenterAnimator.setIntValues((int) targetAngle);
+                    mAutoCenterAnimator.setDuration(AUTOCENTER_ANIM_DURATION).start();
+                } else {
+                    mPieView.rotateTo(targetAngle);
+                }
+
+            invalidate();
+        }
+
         public void setPressedColor(int i){
-            Item current;
+            SectorFlyWheelModel current;
+            SectorFlyWheelModel it;
+
+            Log.d("COLOR: ", " Item: " + i);
+
             for(int j = 0; j < mData.size(); j++){
                 if (j == i){
-                    current = mData.get(i);
+                    current = mData.get(j);
                     current.mSliceColor = getResources().getColor(R.color.pressedSectorColor);
-                    current.mStrokeColor = getResources().getColor(R.color.pressedStrokeColor);
+                    Log.d("COLOR1: ", " Item: " + (j));
 
+                    if((j-1) < 0){
+                        it = mData.get(mData.size() - 2);
+                        current = mData.get(mData.size() - 1);
+                        Log.d("COLOR2: ", " Item: " + (mData.size() - 1));
+
+                    }else {
+                        Log.d("COLORIN: ", " Item: " + (j));
+
+                        current = mData.get(j-1);
+                        Log.d("COLOR3: ", " Item: " + (j - 1));
+
+                        if (j-2 < 0){
+                            it = mData.get(mData.size()-1);
+                            Log.d("COLOR4: ", " Item: " + (mData.size() - 1));
+
+                        } else {
+                            it = mData.get(j-2);
+                            Log.d("COLOR5: ", " Item: " + (mData.size() - 2));
+
+                        }
+                    }
+                    current.mStrokeColor = getResources().getColor(R.color.pressedStrokeColor);
+                    it.mStrokeColor = getResources().getColor(R.color.pressedStrokeColor);
                 }
-                else{
+                else {
                     current = mData.get(j);
                     current.mSliceColor = getResources().getColor(R.color.fillSector);
+
+                    if((j-1)<0){
+                        current = mData.get(mData.size()-1);
+                        Log.d("COLOR6: ", " Item: " + (mData.size()-1));
+
+                    }else {
+                        current = mData.get(j-1);
+                        Log.d("COLOR7: ", " Item: " + (j));
+                    }
                     current.mStrokeColor = getResources().getColor(R.color.strokeColor);
                 }
             }
@@ -607,7 +544,6 @@ public class PieChart extends ViewGroup {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            // Set the pie rotation directly.
                 float scrollTheta = vectorToScalarScroll(
                         distanceX,
                         distanceY,
@@ -619,7 +555,7 @@ public class PieChart extends ViewGroup {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            // Set up the Scroller for a fling
+
                 float scrollTheta = vectorToScalarScroll(
                         velocityX,
                         velocityY,
@@ -635,7 +571,6 @@ public class PieChart extends ViewGroup {
                         Integer.MIN_VALUE,
                         Integer.MAX_VALUE);
 
-                // Start the animator and tell it to animate for the expected duration of the fling.
                 if (Build.VERSION.SDK_INT >= 11) {
                     mScrollAnimator.setDuration(mScroller.getDuration());
                     mScrollAnimator.start();
@@ -645,7 +580,6 @@ public class PieChart extends ViewGroup {
 
         @Override
         public boolean onDown(MotionEvent e) {
-//            mPieView.accelerate();
             return true;
         }
     }
@@ -670,7 +604,5 @@ public class PieChart extends ViewGroup {
 
         return l * sign;
     }
-
-
 }
 

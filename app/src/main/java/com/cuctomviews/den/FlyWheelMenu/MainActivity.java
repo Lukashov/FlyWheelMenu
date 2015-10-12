@@ -1,14 +1,11 @@
 package com.cuctomviews.den.FlyWheelMenu;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 
 import android.app.Activity;
 import android.content.res.Resources;
-import android.widget.Button;
-
-import com.cuctomviews.den.FlyWheelMenu.charting.PieChart;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 public class MainActivity extends Activity {
     /**
@@ -32,5 +29,8 @@ public class MainActivity extends Activity {
 //        pie.addItem(1, Color.GRAY,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
 //        pie.addItem(1, Color.MAGENTA,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
 
+
+        RadioGroup radioGroup = new RadioGroup(this);
+        RadioButton radioButton = new RadioButton(this);
     }
 }
