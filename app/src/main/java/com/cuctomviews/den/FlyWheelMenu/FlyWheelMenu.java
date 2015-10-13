@@ -17,7 +17,7 @@ package com.cuctomviews.den.FlyWheelMenu;
         import java.util.ArrayList;
         import java.util.List;
 
-public class PieChart extends ViewGroup {
+public class FlyWheelMenu extends ViewGroup {
 
     private List<SectorFlyWheelModel> mData = new ArrayList<SectorFlyWheelModel>();
 
@@ -31,16 +31,12 @@ public class PieChart extends ViewGroup {
 
     private int mPieRotation;
 
-    private PieView mPieView;
     private SectorFlyWheelView mSectorFlyWheelView;
     private Scroller mScroller;
     private ValueAnimator mScrollAnimator;
     private GestureDetector mDetector;
     private float mDiameterMax;
 
-    private int mCurrentItemAngle;
-
-    private int mCurrentItem = 0;
     private boolean mAutoCenterInSlice;
     private ObjectAnimator mAutoCenterAnimator;
 
@@ -48,31 +44,26 @@ public class PieChart extends ViewGroup {
 
     public static final int AUTOCENTER_ANIM_DURATION = 250;
 
-    int [] icons = {R.drawable.bluetooth,R.drawable.call_transfer,R.drawable.callback, R.drawable.cellular_network,
-            R.drawable.end_call,R.drawable.high_connection, R.drawable.missed_call,R.drawable.mms};
-
-    private float mRadius;
-
     private SectorFlyWheelModel mSectorFlyWheelModel;
 
-    public PieChart(Context context) {
+    public FlyWheelMenu(Context context) {
         super(context);
         init();
     }
 
-    public PieChart(Context context, AttributeSet attrs) {
+    public FlyWheelMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         TypedArray a = context.getTheme().obtainStyledAttributes(
                 attrs,
-                R.styleable.PieChart,
+                R.styleable.FlyWheelMenu,
                 0, 0
         );
 
         try {
-            mHighlightStrength = a.getFloat(R.styleable.PieChart_highlightStrength, 1.0f);
-            mPieRotation = a.getInt(R.styleable.PieChart_pieRotation, 0);
-            mAutoCenterInSlice = a.getBoolean(R.styleable.PieChart_autoCenterPointerInSlice, false);
+            mHighlightStrength = a.getFloat(R.styleable.FlyWheelMenu_highlightStrength, 1.0f);
+            mPieRotation = a.getInt(R.styleable.FlyWheelMenu_pieRotation, 0);
+            mAutoCenterInSlice = a.getBoolean(R.styleable.FlyWheelMenu_autoCenterPointerInSlice, false);
         } finally {
             a.recycle();
         }
@@ -87,7 +78,7 @@ public class PieChart extends ViewGroup {
     public void setPieRotation(int rotation) {
         rotation = (rotation % 360 + 360) % 360;
         mPieRotation = rotation;
-        mPieView.rotateTo(rotation);
+        mSectorFlyWheelView.rotateTo(rotation);
     }
 
     public int addItem(float value, int sliceColor, int strokeColor) {
@@ -128,13 +119,13 @@ public class PieChart extends ViewGroup {
                 0.0f,
                 mDiameterMax,
                 mDiameterMax);
-        mPieBounds.offsetTo(w/2-mDiameterMax/2, getPaddingTop());
+        mPieBounds.offsetTo(w / 2 - mDiameterMax / 2, getPaddingTop());
 
-        mPieView.layout((int) mPieBounds.left,
+        mSectorFlyWheelView.layout((int) mPieBounds.left,
                 (int) mPieBounds.top,
                 (int) mPieBounds.right,
                 (int) mPieBounds.bottom);
-        mPieView.setPivot(mPieBounds.width() / 2, mPieBounds.height() / 2);
+        mSectorFlyWheelView.setPivot(mPieBounds.width() / 2, mPieBounds.height() / 2);
 
         onDataChanged();
     }
@@ -155,15 +146,13 @@ public class PieChart extends ViewGroup {
         mPiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPiePaint.setStyle(Paint.Style.FILL);
 
-//        mSectorFlyWheelView = new SectorFlyWheelView(getContext(), mSectorFlyWheelModel);
+        mSectorFlyWheelView = new SectorFlyWheelView(getContext(), mData);
 
-        mPieView = new PieView(getContext());
-
-        addView(mPieView);
-        mPieView.rotateTo(mPieRotation);
+        addView(mSectorFlyWheelView);
+        mSectorFlyWheelView.rotateTo(mPieRotation);
 
         if (Build.VERSION.SDK_INT >= 11) {
-            mAutoCenterAnimator = ObjectAnimator.ofInt(PieChart.this, "PieRotation", 0);
+            mAutoCenterAnimator = ObjectAnimator.ofInt(FlyWheelMenu.this, "PieRotation", 0);
 
             mAutoCenterAnimator.addListener(new Animator.AnimatorListener() {
                 public void onAnimationStart(Animator animator) {
@@ -242,185 +231,6 @@ public class PieChart extends ViewGroup {
         }
     }
 
-    private class PieView extends View {
-        // Used for SDK < 11
-        private float mRotation = 0;
-        private Matrix mTransform = new Matrix();
-        private PointF mPivot = new PointF();
-        private int mColor;
-
-        public PieView(Context context) {
-            super(context);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-
-            if (Build.VERSION.SDK_INT < 11) {
-                mTransform.set(canvas.getMatrix());
-                mTransform.preRotate(mRotation, mPivot.x, mPivot.y);
-                canvas.setMatrix(mTransform);
-            }
-
-            int width = getWidth();
-            int height = getHeight();
-            int radius;
-
-            if (width > height) {
-                radius = height / 2;
-            } else {
-                radius = width / 2;
-            }
-
-            float x = (float) (Math.cos(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
-            float y = (float) (Math.sin(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
-
-            for (SectorFlyWheelModel it : mData) {
-
-                mBounds.set(width / 2 - radius + 5, height / 2 - radius + 5, width / 2 + radius - 5, height / 2 + radius - 5);
-
-                //Fill Sector
-                mPiePaint.setColor(it.mSliceColor);
-                mPiePaint.setAntiAlias(true);
-                mPiePaint.setStyle(Paint.Style.FILL);
-                canvas.drawArc(mBounds,
-                        360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2,
-                        360f / mData.size(),
-                        true, mPiePaint);
-                Log.d("CANVAS: ", "End: " + 360f / mData.size() + " ,Start: " + (360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2));
-
-                //Line
-//                mPiePaint.setColor(it.mStrokeColor);
-//                mPiePaint.setStrokeWidth(5);
-//                mPiePaint.setAntiAlias(true);
-//                mPiePaint.setStyle(Paint.Style.STROKE);
-//                canvas.drawArc(mBounds,
-//                        360f - it.mEndAngle - (90 - 360f/mData.size()) - 360f/mData.size()/2,
-//                        360f/mData.size(),
-//                        true, mPiePaint);
-            }
-
-//            TODO: заменить Битмап на дровабле
-            SectorFlyWheelModel it;
-            for (int i = 0 ; i <  mData.size() ; i ++) {
-                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), icons[i]);
-                canvas.drawBitmap(bitmap, mBounds.centerX() - bitmap.getWidth() / 2,
-                        mBounds.centerY() - (radius * 2 / 3) - bitmap.getHeight() / 2, mPiePaint);
-
-                it = mData.get( mData.size() -1 - i);
-                mPiePaint.setColor(it.mStrokeColor);
-                mPiePaint.setStrokeWidth(5);
-                canvas.drawLine(mBounds.centerX(), mBounds.centerY(), mBounds.centerX() + x, mBounds.centerY() + y, mPiePaint);
-
-                canvas.rotate(360f/mData.size(), mBounds.centerX(), mBounds.centerY());
-            }
-
-            //Ring1
-            mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
-            mPiePaint.setStrokeWidth(10);
-            mPiePaint.setAntiAlias(true);
-            mPiePaint.setStrokeCap(Paint.Cap.ROUND);
-            mPiePaint.setStyle(Paint.Style.STROKE);
-            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-
-            //Ring2
-
-            mBounds.set(width / 2 - radius / 3, height / 2 - radius / 3, width / 2 + radius / 3, height / 2 + radius / 3);
-
-            mPiePaint.setColor(getResources().getColor(R.color.pressedSectorColor));
-            mPiePaint.setAntiAlias(true);
-            mPiePaint.setStyle(Paint.Style.FILL);
-            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-
-            //Ring3
-            mBounds.set(width / 2 - radius / 5, height / 2 - radius / 5, width / 2 + radius / 5, height / 2 + radius / 5);
-            mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
-            mPiePaint.setAntiAlias(true);
-            mPiePaint.setStyle(Paint.Style.FILL);
-            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-//            mPiePaint.setColor(getResources().getColor(R.color.redShadowColor));
-//            mPiePaint.setStrokeWidth(10);
-//            mPiePaint.setAntiAlias(true);
-//            mPiePaint.setStrokeCap(Paint.Cap.ROUND);
-//            mPiePaint.setStyle(Paint.Style.STROKE);
-//            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-//
-
-            canvas.save();
-        }
-
-        public void setColor(int color) {
-            mColor = color;
-        }
-
-        @Override
-        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-            mBounds = new RectF(0, 0, w, h);
-        }
-
-        RectF mBounds;
-
-//        @Override
-//        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//
-//            int measuredWidth = measureWidth(widthMeasureSpec);
-//            mRadius = mDiameterMax/2;
-//            if (mRadius == 0) {
-//                mRadius = measuredWidth;
-//            }
-//            int measuredHeight = measureHeight(heightMeasureSpec);
-//            if (measuredHeight < measuredWidth)
-//                mRadius  = measuredHeight / 2;
-//            mRadius -= 10;
-//            setMeasuredDimension(measuredWidth, measuredHeight);
-//        }
-//
-//        private int measureWidth(int measureSpec) {
-//            int specMode = MeasureSpec.getMode(measureSpec);
-//            int specSize = MeasureSpec.getSize(measureSpec);
-//            int result = 0;
-//            if (specMode == MeasureSpec.AT_MOST) {
-//                result = specSize;
-//            } else if (specMode == MeasureSpec.EXACTLY) {
-//                result = specSize;
-//            }
-//            return result;
-//        }
-//
-//        private int measureHeight(int measureSpec) {
-//            int specMode = MeasureSpec.getMode(measureSpec);
-//            int specSize = MeasureSpec.getSize(measureSpec);
-//            int result = 0;
-//            if (specMode == MeasureSpec.AT_MOST) {
-//                result = (int) (mRadius * 2);
-//            } else if (specMode == MeasureSpec.EXACTLY) {
-//                result = specSize;
-//            }
-//            return result;
-//        }
-
-        public void rotateTo(float pieRotation) {
-            mRotation = pieRotation;
-            if (Build.VERSION.SDK_INT >= 11) {
-                setRotation(pieRotation);
-            } else {
-                invalidate();
-            }
-        }
-
-        public void setPivot(float x, float y) {
-            mPivot.x = x;
-            mPivot.y = y;
-            if (Build.VERSION.SDK_INT >= 11) {
-                setPivotX(x);
-                setPivotY(y);
-            } else {
-                invalidate();
-            }
-        }
-    }
-
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
         @Override
@@ -483,7 +293,8 @@ public class PieChart extends ViewGroup {
                     mAutoCenterAnimator.setIntValues((int) targetAngle);
                     mAutoCenterAnimator.setDuration(AUTOCENTER_ANIM_DURATION).start();
                 } else {
-                    mPieView.rotateTo(targetAngle);
+//                    mPieView.rotateTo(targetAngle);
+                    mSectorFlyWheelView.rotateTo(targetAngle);
                 }
 
             invalidate();

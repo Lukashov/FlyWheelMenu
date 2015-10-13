@@ -36,15 +36,17 @@ public class SectorFlyWheelView extends View {
     int [] icons = {R.drawable.bluetooth,R.drawable.call_transfer,R.drawable.callback, R.drawable.cellular_network,
             R.drawable.end_call,R.drawable.high_connection, R.drawable.missed_call,R.drawable.mms};
 
-    public SectorFlyWheelView(Context context, SectorFlyWheelModel sectorFlyWheelModel) {
+    public SectorFlyWheelView(Context context, List<SectorFlyWheelModel> data) {
         super(context);
-        mSectorFlyWheelModel = sectorFlyWheelModel;
+        mData = data;
         init();
     }
 
     public void init(){
         mPiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        mSectorFlyWheelModel = new SectorFlyWheelModel();
+//        mPiePaint.setStyle(Paint.Style.FILL);
+
+        mSectorFlyWheelModel = new SectorFlyWheelModel();
     }
 
     @Override
@@ -57,6 +59,7 @@ public class SectorFlyWheelView extends View {
             canvas.setMatrix(mTransform);
         }
 
+        Log.d("LOG:", "OnDraw!");
         int width = getWidth();
         int height = getHeight();
         int radius;
@@ -172,5 +175,46 @@ public class SectorFlyWheelView extends View {
             invalidate();
         }
     }
+
+    //        @Override
+//        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//
+//            int measuredWidth = measureWidth(widthMeasureSpec);
+//            mRadius = mDiameterMax/2;
+//            if (mRadius == 0) {
+//                mRadius = measuredWidth;
+//            }
+//            int measuredHeight = measureHeight(heightMeasureSpec);
+//            if (measuredHeight < measuredWidth)
+//                mRadius  = measuredHeight / 2;
+//            mRadius -= 10;
+//            setMeasuredDimension(measuredWidth, measuredHeight);
+//        }
+//
+//        private int measureWidth(int measureSpec) {
+//            int specMode = MeasureSpec.getMode(measureSpec);
+//            int specSize = MeasureSpec.getSize(measureSpec);
+//            int result = 0;
+//            if (specMode == MeasureSpec.AT_MOST) {
+//                result = specSize;
+//            } else if (specMode == MeasureSpec.EXACTLY) {
+//                result = specSize;
+//            }
+//            return result;
+//        }
+//
+//        private int measureHeight(int measureSpec) {
+//            int specMode = MeasureSpec.getMode(measureSpec);
+//            int specSize = MeasureSpec.getSize(measureSpec);
+//            int result = 0;
+//            if (specMode == MeasureSpec.AT_MOST) {
+//                result = (int) (mRadius * 2);
+//            } else if (specMode == MeasureSpec.EXACTLY) {
+//                result = specSize;
+//            }
+//            return result;
+//        }
+
+
 }
 

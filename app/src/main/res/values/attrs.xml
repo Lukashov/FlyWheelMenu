@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="PieChart">
+    <declare-styleable name="FlyWheelMenu">
         <attr name="autoCenterPointerInSlice" format="boolean"/>
         <attr name="highlightStrength" format="float"/>
         <attr name="labelColor" format="color"/>

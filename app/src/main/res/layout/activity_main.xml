@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <com.cuctomviews.den.FlyWheelMenu.PieChart
+    <com.cuctomviews.den.FlyWheelMenu.FlyWheelMenu
         android:id="@+id/Pie"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
@@ -15,6 +15,6 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true">
-        </com.cuctomviews.den.FlyWheelMenu.PieChart>
+        </com.cuctomviews.den.FlyWheelMenu.FlyWheelMenu>
 
 </RelativeLayout>

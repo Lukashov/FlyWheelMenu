@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
         Resources res = getResources();
 
         setContentView(com.cuctomviews.den.FlyWheelMenu.R.layout.activity_main);
-        final PieChart pie = (PieChart) this.findViewById(com.cuctomviews.den.FlyWheelMenu.R.id.Pie);
+        final FlyWheelMenu pie = (FlyWheelMenu) this.findViewById(com.cuctomviews.den.FlyWheelMenu.R.id.Pie);
         for (int i = 0; i < 7; i++){
             pie.addItem(1, getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.fillSector),getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
         }
