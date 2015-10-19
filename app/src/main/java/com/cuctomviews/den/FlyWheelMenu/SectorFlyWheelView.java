@@ -1,15 +1,15 @@
 package com.cuctomviews.den.FlyWheelMenu;
 
+import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.util.Log;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -24,42 +24,51 @@ public class SectorFlyWheelView extends View {
     private float mRotation = 0;
     private Matrix mTransform = new Matrix();
     private PointF mPivot = new PointF();
+
     private int mColor;
+    private float mSweepAngle;
 
     private SectorFlyWheelModel mSectorFlyWheelModel;
 
     RectF mBounds;
     private List<SectorFlyWheelModel> mData = new ArrayList<SectorFlyWheelModel>();
-    private Paint mPiePaint;
+    private Paint mFlyWheelPaint;
 
 
-    int [] icons = {R.drawable.bluetooth,R.drawable.call_transfer,R.drawable.callback, R.drawable.cellular_network,
-            R.drawable.end_call,R.drawable.high_connection, R.drawable.missed_call,R.drawable.mms};
+    int [] icons = {
+            R.drawable.bluetooth,
+            R.drawable.call_transfer,
+            R.drawable.callback,
+            R.drawable.cellular_network,
+            R.drawable.end_call,
+            R.drawable.high_connection,
+            R.drawable.missed_call,
+            R.drawable.mms};
 
-    public SectorFlyWheelView(Context context, List<SectorFlyWheelModel> data) {
-        super(context);
-        mData = data;
+    private Drawable mDrawable;
+
+    public SectorFlyWheelView(Context _context, List<SectorFlyWheelModel> _data) {
+        super(_context);
+        mData = _data;
         init();
     }
 
     public void init(){
-        mPiePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//        mPiePaint.setStyle(Paint.Style.FILL);
-
+        mFlyWheelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mSectorFlyWheelModel = new SectorFlyWheelModel();
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+    protected void onDraw(Canvas _canvas) {
+        super.onDraw(_canvas);
 
         if (Build.VERSION.SDK_INT < 11) {
-            mTransform.set(canvas.getMatrix());
+            mTransform.set(_canvas.getMatrix());
             mTransform.preRotate(mRotation, mPivot.x, mPivot.y);
-            canvas.setMatrix(mTransform);
+            _canvas.setMatrix(mTransform);
         }
 
-        Log.d("LOG:", "OnDraw!");
         int width = getWidth();
         int height = getHeight();
         int radius;
@@ -70,151 +79,132 @@ public class SectorFlyWheelView extends View {
             radius = width / 2;
         }
 
-        float x = (float) (Math.cos(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
-        float y = (float) (Math.sin(Math.toRadians(270-360f/mData.size()/2))*(radius-5));
+        createFillSector(_canvas, width, height, radius);
+        createInnerRing(_canvas, width, height, radius);
+
+        _canvas.save();
+    }
+
+    private void createFillSector(Canvas _canvas, int _width, int _height, int _radius) {
+        drawSector(_canvas, _width, _height, _radius);
+        drawIconAndLineForSector(_canvas, _radius);
+        drawArcForSector(_canvas);
+    }
+
+    private void drawSector(Canvas _canvas, int _width, int _height, int _radius) {
+        mBounds.set(_width / 2 - _radius + 5,
+                _height / 2 - _radius + 5,
+                _width / 2 + _radius - 5,
+                _height / 2 + _radius - 5);
 
         for (SectorFlyWheelModel it : mData) {
 
-            mBounds.set(width / 2 - radius + 5, height / 2 - radius + 5, width / 2 + radius - 5, height / 2 + radius - 5);
-
-            //Fill Sector
-            mPiePaint.setColor(it.mSliceColor);
-            mPiePaint.setAntiAlias(true);
-            mPiePaint.setStyle(Paint.Style.FILL);
-            canvas.drawArc(mBounds,
-                    360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2,
+            mFlyWheelPaint.setColor(it.mSectorColor);
+            mFlyWheelPaint.setAntiAlias(true);
+            mFlyWheelPaint.setStyle(Paint.Style.FILL);
+            _canvas.drawArc(mBounds,
+                    270f - it.mEndAngle + 360f / mData.size() / 2,
                     360f / mData.size(),
-                    true, mPiePaint);
-            Log.d("CANVAS: ", "End: " + 360f / mData.size() + " ,Start: " + (360f - it.mEndAngle - (90 - 360f / mData.size()) - 360f / mData.size() / 2));
-
-            //Line
-//                mPiePaint.setColor(it.mStrokeColor);
-//                mPiePaint.setStrokeWidth(5);
-//                mPiePaint.setAntiAlias(true);
-//                mPiePaint.setStyle(Paint.Style.STROKE);
-//                canvas.drawArc(mBounds,
-//                        360f - it.mEndAngle - (90 - 360f/mData.size()) - 360f/mData.size()/2,
-//                        360f/mData.size(),
-//                        true, mPiePaint);
+                    true, mFlyWheelPaint);
         }
-
-//            TODO: заменить Битмап на дровабле
-        SectorFlyWheelModel it;
-        for (int i = 0 ; i <  mData.size() ; i ++) {
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), icons[i]);
-            canvas.drawBitmap(bitmap, mBounds.centerX() - bitmap.getWidth() / 2,
-                    mBounds.centerY() - (radius * 2 / 3) - bitmap.getHeight() / 2, mPiePaint);
-
-            it = mData.get( mData.size() -1 - i);
-            mPiePaint.setColor(it.mStrokeColor);
-            mPiePaint.setStrokeWidth(5);
-            canvas.drawLine(mBounds.centerX(), mBounds.centerY(), mBounds.centerX() + x, mBounds.centerY() + y, mPiePaint);
-
-            canvas.rotate(360f/mData.size(), mBounds.centerX(), mBounds.centerY());
-        }
-
-        //Ring1
-        mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
-        mPiePaint.setStrokeWidth(10);
-        mPiePaint.setAntiAlias(true);
-        mPiePaint.setStrokeCap(Paint.Cap.ROUND);
-        mPiePaint.setStyle(Paint.Style.STROKE);
-        canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-
-        //Ring2
-
-        mBounds.set(width / 2 - radius / 3, height / 2 - radius / 3, width / 2 + radius / 3, height / 2 + radius / 3);
-
-        mPiePaint.setColor(getResources().getColor(R.color.pressedSectorColor));
-        mPiePaint.setAntiAlias(true);
-        mPiePaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-
-        //Ring3
-        mBounds.set(width / 2 - radius / 5, height / 2 - radius / 5, width / 2 + radius / 5, height / 2 + radius / 5);
-        mPiePaint.setColor(getResources().getColor(R.color.strokeColor));
-        mPiePaint.setAntiAlias(true);
-        mPiePaint.setStyle(Paint.Style.FILL);
-        canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-//            mPiePaint.setColor(getResources().getColor(R.color.redShadowColor));
-//            mPiePaint.setStrokeWidth(10);
-//            mPiePaint.setAntiAlias(true);
-//            mPiePaint.setStrokeCap(Paint.Cap.ROUND);
-//            mPiePaint.setStyle(Paint.Style.STROKE);
-//            canvas.drawArc(mBounds, 0, 360, false, mPiePaint);
-//
-
-        canvas.save();
     }
 
-    public void setColor(int color) {
-        mColor = color;
+    private void drawArcForSector(Canvas _canvas) {
+        mFlyWheelPaint.setColor(getResources().getColor(R.color.strokeColor));
+        mFlyWheelPaint.setStrokeWidth(10);
+        mFlyWheelPaint.setAntiAlias(true);
+        mFlyWheelPaint.setStrokeCap(Paint.Cap.ROUND);
+        mFlyWheelPaint.setStyle(Paint.Style.STROKE);
+        _canvas.drawArc(mBounds, 0, 360, false, mFlyWheelPaint);
+    }
+
+    private void drawIconAndLineForSector(Canvas _canvas, int _radius) {
+
+        float x = (float) (Math.cos(Math.toRadians(270 - 360f / mData.size() / 2))*(_radius - 10));
+        float y = (float) (Math.sin(Math.toRadians(270 - 360f / mData.size() / 2))*(_radius - 10));
+
+        SectorFlyWheelModel it;
+        for (int i = 0 ; i <  mData.size() ; i ++) {
+
+            mDrawable = ContextCompat.getDrawable(getContext(), icons[i]);
+            int sizeImage = (_radius * 20) / 100;
+            int positionLeft = (int) (mBounds.centerX() - sizeImage / 2);
+            int positionTop = (int) (mBounds.centerY() - (_radius * 2 / 3) - sizeImage / 2);
+            mDrawable.setBounds(positionLeft,
+                    positionTop,
+                    positionLeft + sizeImage,
+                    positionTop + sizeImage);
+
+            mDrawable.draw(_canvas);
+
+            it = mData.get( mData.size() -1 - i);
+            mFlyWheelPaint.setColor(it.mStrokeColor);
+            mFlyWheelPaint.setStrokeWidth(5);
+
+            _canvas.drawLine(mBounds.centerX(),
+                    mBounds.centerY(),
+                    mBounds.centerX() + x,
+                    mBounds.centerY() + y, mFlyWheelPaint);
+
+            _canvas.rotate(360f / mData.size(), mBounds.centerX(), mBounds.centerY());
+        }
+    }
+
+    private void createInnerRing(Canvas _canvas, int _width, int _height, int _radius) {
+        //Ring1
+        mBounds.set(_width / 2 - _radius / 3,
+                _height / 2 - _radius / 3,
+                _width / 2 + _radius / 3,
+                _height / 2 + _radius / 3);
+
+        mFlyWheelPaint.setColor(getResources().getColor(R.color.pressedSectorColor));
+        mFlyWheelPaint.setAntiAlias(true);
+        mFlyWheelPaint.setStyle(Paint.Style.FILL);
+        _canvas.drawArc(mBounds, 0, 360, false, mFlyWheelPaint);
+
+        //Ring2
+        mBounds.set(_width / 2 - _radius / 5,
+                _height / 2 - _radius / 5,
+                _width / 2 + _radius / 5,
+                _height / 2 + _radius / 5);
+        mFlyWheelPaint.setColor(getResources().getColor(R.color.strokeColor));
+        mFlyWheelPaint.setAntiAlias(true);
+        mFlyWheelPaint.setStyle(Paint.Style.FILL);
+        _canvas.drawArc(mBounds, 0, 360, false, mFlyWheelPaint);
+    }
+
+    public void setColor(int _color) {
+        mColor = _color;
     }
 
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        mBounds = new RectF(0, 0, w, h);
+    protected void onSizeChanged(int _w, int _h, int _oldw, int _oldh) {
+        mBounds = new RectF(0, 0, _w, _h);
     }
 
-    public void rotateTo(float pieRotation) {
-        mRotation = pieRotation;
+    public void rotateTo(float _pieRotation) {
+        mRotation = _pieRotation;
         if (Build.VERSION.SDK_INT >= 11) {
-            setRotation(pieRotation);
+            setRotation(_pieRotation);
         } else {
             invalidate();
         }
     }
 
-    public void setPivot(float x, float y) {
-        mPivot.x = x;
-        mPivot.y = y;
+    public void setPivot(float _x, float _y) {
+        mPivot.x = _x;
+        mPivot.y = _y;
         if (Build.VERSION.SDK_INT >= 11) {
-            setPivotX(x);
-            setPivotY(y);
+            setPivotX(_x);
+            setPivotY(_y);
         } else {
             invalidate();
         }
     }
 
-    //        @Override
-//        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//
-//            int measuredWidth = measureWidth(widthMeasureSpec);
-//            mRadius = mDiameterMax/2;
-//            if (mRadius == 0) {
-//                mRadius = measuredWidth;
-//            }
-//            int measuredHeight = measureHeight(heightMeasureSpec);
-//            if (measuredHeight < measuredWidth)
-//                mRadius  = measuredHeight / 2;
-//            mRadius -= 10;
-//            setMeasuredDimension(measuredWidth, measuredHeight);
-//        }
-//
-//        private int measureWidth(int measureSpec) {
-//            int specMode = MeasureSpec.getMode(measureSpec);
-//            int specSize = MeasureSpec.getSize(measureSpec);
-//            int result = 0;
-//            if (specMode == MeasureSpec.AT_MOST) {
-//                result = specSize;
-//            } else if (specMode == MeasureSpec.EXACTLY) {
-//                result = specSize;
-//            }
-//            return result;
-//        }
-//
-//        private int measureHeight(int measureSpec) {
-//            int specMode = MeasureSpec.getMode(measureSpec);
-//            int specSize = MeasureSpec.getSize(measureSpec);
-//            int result = 0;
-//            if (specMode == MeasureSpec.AT_MOST) {
-//                result = (int) (mRadius * 2);
-//            } else if (specMode == MeasureSpec.EXACTLY) {
-//                result = specSize;
-//            }
-//            return result;
-//        }
 
-
+    public RectF getBounds() {
+        return mBounds;
+    }
 }
 

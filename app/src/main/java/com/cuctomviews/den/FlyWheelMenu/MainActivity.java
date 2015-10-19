@@ -15,22 +15,11 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Resources res = getResources();
-
         setContentView(com.cuctomviews.den.FlyWheelMenu.R.layout.activity_main);
-        final FlyWheelMenu pie = (FlyWheelMenu) this.findViewById(com.cuctomviews.den.FlyWheelMenu.R.id.Pie);
+        FlyWheelMenu pie = (FlyWheelMenu) this.findViewById(com.cuctomviews.den.FlyWheelMenu.R.id.pie);
+
         for (int i = 0; i < 7; i++){
-            pie.addItem(1, getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.fillSector),getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
+            pie.addItem(2, getResources().getColor(R.color.fillSector),getResources().getColor(R.color.strokeColor));
         }
-
-//        pie.addItem(1, Color.RED,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
-//        pie.addItem(1, Color.BLUE,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
-//        pie.addItem(1, Color.YELLOW,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
-//        pie.addItem(1, Color.GRAY,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
-//        pie.addItem(1, Color.MAGENTA,getResources().getColor(com.cuctomviews.den.FlyWheelMenu.R.color.strokeColor));
-
-
-        RadioGroup radioGroup = new RadioGroup(this);
-        RadioButton radioButton = new RadioButton(this);
     }
 }

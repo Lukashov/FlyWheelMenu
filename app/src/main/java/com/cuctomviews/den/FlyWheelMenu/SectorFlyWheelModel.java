@@ -5,10 +5,9 @@ package com.cuctomviews.den.FlyWheelMenu;
  */
 public class SectorFlyWheelModel {
     public float mValue;
-    public int mSliceColor;
+    public int mSectorColor;
     public int mStrokeColor;
 
-    // computed values
     public float mStartAngle;
     public float mEndAngle;
 }
